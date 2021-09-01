@@ -1,13 +1,64 @@
 import React from "react";
 import axios from "axios";
-import { BrowserRouter as Router, Route, Link, Switch } from "react-router-dom";
-import { Button, Divider, Header, Container } from "semantic-ui-react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Link,
+  Switch,
+  useParams,
+} from "react-router-dom";
+import { Button, Divider, Header, Container, Icon } from "semantic-ui-react";
 
 import { apiBaseUrl } from "./constants";
 import { useStateValue } from "./state";
 import { Patient } from "./types";
 
 import PatientListPage from "./PatientListPage";
+
+const PatientView = () => {
+  const [{ patients }, dispatch] = useStateValue();
+  const { id } = useParams<{ id: string }>();
+
+  React.useEffect(() => {
+    const fetchPatient = async () => {
+      try {
+        const { data: patient } = await axios.get<Patient>(
+          `${apiBaseUrl}/patients/${id}`
+        );
+        dispatch({ type: "ADD_PATIENT", payload: patient });
+        console.log("Fetched!");
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    void fetchPatient();
+  }, [dispatch, id]);
+
+  console.log(patients[id]);
+
+  const patient = patients[id];
+  const iconName =
+    patient.gender == "male"
+      ? "male"
+      : patient.gender == "female"
+      ? "female"
+      : "other gender";
+
+  if (patient) {
+    return (
+      <Container>
+        <Header as="h2">
+          {patient.name}
+          <Icon name={iconName} />
+        </Header>
+        <p>SSN: {patient.ssn}</p>
+        <p>Date of Birth: {patient.dateOfBirth}</p>
+        <p>Occupation: {patient.occupation}</p>
+      </Container>
+    );
+  }
+  return <div>No info available</div>;
+};
 
 const App = () => {
   const [, dispatch] = useStateValue();
@@ -37,6 +88,9 @@ const App = () => {
           </Button>
           <Divider hidden />
           <Switch>
+            <Route path="/:id">
+              <PatientView />
+            </Route>
             <Route path="/">
               <PatientListPage />
             </Route>

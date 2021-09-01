@@ -10,7 +10,7 @@ import {
 import { Button, Divider, Header, Container, Icon } from "semantic-ui-react";
 
 import { apiBaseUrl } from "./constants";
-import { useStateValue } from "./state";
+import { useStateValue, setPatientList, updatePatient } from "./state";
 import { Patient } from "./types";
 
 import PatientListPage from "./PatientListPage";
@@ -25,7 +25,7 @@ const PatientView = () => {
         const { data: patient } = await axios.get<Patient>(
           `${apiBaseUrl}/patients/${id}`
         );
-        dispatch({ type: "ADD_PATIENT", payload: patient });
+        dispatch(updatePatient(patient));
         console.log("Fetched!");
       } catch (e) {
         console.error(e);
@@ -38,11 +38,8 @@ const PatientView = () => {
 
   const patient = patients[id];
   const iconName =
-    patient.gender == "male"
-      ? "male"
-      : patient.gender == "female"
-      ? "female"
-      : "other gender";
+    patient.gender == "other"
+      ? "other gender" : patient.gender;
 
   if (patient) {
     return (
@@ -70,7 +67,7 @@ const App = () => {
         const { data: patientListFromApi } = await axios.get<Patient[]>(
           `${apiBaseUrl}/patients`
         );
-        dispatch({ type: "SET_PATIENT_LIST", payload: patientListFromApi });
+        dispatch(setPatientList(patientListFromApi));
       } catch (e) {
         console.error(e);
       }

@@ -10,13 +10,13 @@ import {
 import { Button, Divider, Header, Container, Icon } from "semantic-ui-react";
 
 import { apiBaseUrl } from "./constants";
-import { useStateValue, setPatientList, updatePatient } from "./state";
-import { Patient } from "./types";
+import { useStateValue, setPatientList, updatePatient, setDiagnosisList } from "./state";
+import { Diagnosis, Patient } from "./types";
 
 import PatientListPage from "./PatientListPage";
 
 const PatientView = () => {
-  const [{ patients }, dispatch] = useStateValue();
+  const [{ patients, diagnoses }, dispatch] = useStateValue();
   const { id } = useParams<{ id: string }>();
 
   React.useEffect(() => {
@@ -57,7 +57,7 @@ const PatientView = () => {
               <p>{entry.date}: {entry.description}</p>
               <ul>
                 {entry.diagnosisCodes?.map((code) => (
-                  <li key={code}>{code}</li>
+                  <li key={code}>{code}: {diagnoses[code].name}</li>
                 ))}
               </ul>
             </div>
@@ -84,7 +84,19 @@ const App = () => {
         console.error(e);
       }
     };
+
+    const fetchDiagnosisList = async () => {
+      try {
+        const { data: diagnosisListFromApi } = await axios.get<Diagnosis[]>(
+          `${apiBaseUrl}/diagnoses`
+        );
+        dispatch(setDiagnosisList(diagnosisListFromApi));
+      } catch (e) {
+        console.error(e);
+      }
+    };
     void fetchPatientList();
+    void fetchDiagnosisList();
   }, [dispatch]);
 
   return (

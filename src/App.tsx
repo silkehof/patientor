@@ -37,9 +37,7 @@ const PatientView = () => {
   console.log(patients[id]);
 
   const patient = patients[id];
-  const iconName =
-    patient.gender == "other"
-      ? "other gender" : patient.gender;
+  const iconName = patient.gender == "other" ? "other gender" : patient.gender;
 
   if (patient) {
     return (
@@ -51,6 +49,20 @@ const PatientView = () => {
         <p>SSN: {patient.ssn}</p>
         <p>Date of Birth: {patient.dateOfBirth}</p>
         <p>Occupation: {patient.occupation}</p>
+        <br></br>
+        <Header as="h3">Patient Entries</Header>
+        <div>
+          {patient.entries.map((entry) => (
+            <div key={entry.id}>
+              <p>{entry.date}: {entry.description}</p>
+              <ul>
+                {entry.diagnosisCodes?.map((code) => (
+                  <li key={code}>{code}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
       </Container>
     );
   }

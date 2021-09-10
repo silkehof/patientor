@@ -1,4 +1,5 @@
 import React from "react";
+import * as CSS from "csstype";
 import axios from "axios";
 import {
   BrowserRouter as Router,
@@ -11,11 +12,88 @@ import { Button, Divider, Header, Container, Icon } from "semantic-ui-react";
 
 import { apiBaseUrl } from "./constants";
 import { useStateValue, setPatientList, updatePatient, setDiagnosisList } from "./state";
-import { Diagnosis, Patient } from "./types";
+import { Diagnosis, Patient, Entry, HospitalEntry, OccupationalHealthcareEntry, HealthCheckEntry } from "./types";
 
 import PatientListPage from "./PatientListPage";
 
+const borderStyle: CSS.Properties<string | number> = {
+  borderWidth: 2,
+  borderColor: 'rgba(128, 128, 128, 1)',
+  borderStyle: 'solid',
+  padding: 10,
+  margin: 10,
+};
+
+const Hospital = ({ entry }: { entry: HospitalEntry }) => {
+  return (
+    <Container style={borderStyle}>
+      <Header as="h3">
+        {entry.date} <Icon name="hospital" />
+      </Header>
+      <p>{entry.description}</p>
+      <Header as="h4">
+        Discharged on {entry.discharge.date}: {entry.discharge.criteria}
+      </Header>
+    </Container>
+  );
+};
+
+const heartColor = (rating: number) => {
+  if (rating === 0) {
+    return "green";
+  } else if (rating === 1) {
+    return "yellow";
+  } else if (rating === 2) {
+    return "orange";
+  } else {
+    return "red";
+  }
+};
+
+const HealthCheck = ({ entry }: { entry: HealthCheckEntry }) => {
+  return (
+    <Container style={borderStyle}>
+      <Header as="h3">
+        {entry.date} <Icon name="heartbeat" />
+      </Header>
+      <p>{entry.description}</p>
+      <Icon className={`${heartColor(entry.healthCheckRating)} heart`}/>
+    </Container>
+  );
+};
+
+const OccupationalHealthcare = ({ entry }: { entry: OccupationalHealthcareEntry }) => {
+  return (
+    <Container style={borderStyle}>
+      <Header as="h3">
+        {entry.date} <Icon name="doctor" /> {entry.employerName}
+      </Header>
+      <p>{entry.description}</p>
+    </Container>
+  );
+};
+
+const assertNever = (value: never): never => {
+  throw new Error(
+    `Unhandled discriminated union member: ${JSON.stringify(value)}`
+  );
+};
+
+const EntryDetails: React.FC<{ entry: Entry }> = ({ entry }) => {
+  switch (entry.type) {
+    case "Hospital":
+      return <Hospital entry={entry}/>;
+    case "HealthCheck":
+      return <HealthCheck entry={entry}/>;
+    case "OccupationalHealthcare":
+      return <OccupationalHealthcare entry={entry}/>;
+    default:
+      return assertNever(entry);
+  }
+};
+
 const PatientView = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [{ patients, diagnoses }, dispatch] = useStateValue();
   const { id } = useParams<{ id: string }>();
 
@@ -53,14 +131,7 @@ const PatientView = () => {
         <Header as="h3">Patient Entries</Header>
         <div>
           {patient.entries.map((entry) => (
-            <div key={entry.id}>
-              <p>{entry.date}: {entry.description}</p>
-              <ul>
-                {entry.diagnosisCodes?.map((code) => (
-                  <li key={code}>{code}: {diagnoses[code].name}</li>
-                ))}
-              </ul>
-            </div>
+            <EntryDetails key={entry.id} entry={entry}/>
           ))}
         </div>
       </Container>
